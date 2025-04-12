@@ -6,15 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>นาฬิกาปลุกสุ่มเวลา</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
 </head>
 
 <body>
     <h1>🎲 สุ่มเวลาปลุกในวันนี้</h1>
-    <button onclick="generateRandomAlarms()">สร้างเวลาแบบสุ่ม</button>
-    <button onclick="downloadICS()">📆 ส่งเข้าแอปปฏิทิน</button>
+    <button id="generateBtn" onclick="generateRandomAlarms()">สร้างเวลาแบบสุ่ม</button>
+    <button id="downloadBtn" onclick="downloadICS()" disabled>📆 ส่งเข้าแอปปฏิทิน</button>
     <ul id="alarmList"></ul>
-
+    <script src="script.js"></script>
 </body>
 
 </html>

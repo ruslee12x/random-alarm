@@ -1,49 +1,68 @@
-let currentAlarms = [];
 
-function generateRandomAlarms() {
-    const alarmList = document.getElementById("alarmList");
-    alarmList.innerHTML = "";
+        let currentAlarms = [];
 
-    const alarmCount = 5; // จำนวนเวลาที่จะสุ่ม
-    const startHour = 9;
-    const endHour = 21;
+        function generateRandomAlarms() {
+            const alarmList = document.getElementById("alarmList");
+            alarmList.innerHTML = "";
 
-    let times = new Set();
+            const alarmCount = 5;
+            const startHour = 9;
+            const endHour = 21;
 
-    while (times.size < alarmCount) {
-        let hour = Math.floor(Math.random() * (endHour - startHour + 1)) + startHour;
-        let minute = Math.floor(Math.random() * 60);
-        let timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        times.add(timeStr);
-    }
+            let times = new Set();
 
-    currentAlarms = [...times].sort();
+            while (times.size < alarmCount) {
+                let hour = Math.floor(Math.random() * (endHour - startHour + 1)) + startHour;
+                let minute = Math.floor(Math.random() * 60);
+                let timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                times.add(timeStr);
+            }
 
-    currentAlarms.forEach(time => {
-        const li = document.createElement("li");
-        li.textContent = `🕒 ${time}`;
-        alarmList.appendChild(li);
-    });
-}
+            currentAlarms = [...times].sort();
 
-function downloadICS() {
-    if (currentAlarms.length === 0) return alert("ยังไม่มีเวลาที่จะส่งเข้าแอปปฏิทิน!");
+            currentAlarms.forEach(time => {
+                const li = document.createElement("li");
+                li.textContent = `🕒 ${time}`;
+                alarmList.appendChild(li);
+            });
 
-    let icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n`;
-    const today = new Date().toISOString().split("T")[0];
+            document.getElementById("downloadBtn").disabled = false;
+        }
 
-    currentAlarms.forEach((time, index) => {
-        const [hour, minute] = time.split(":");
-        const dtStart = `${today}T${hour}${minute}00`;
-        const dtEnd = `${today}T${hour}${(parseInt(minute) + 5).toString().padStart(2, '0')}00`;
-        icsContent += `BEGIN:VEVENT\nSUMMARY:⏰ เตือนสติ (เวลา ${time})\nDTSTART:${dtStart.replace(/[-:]/g, '')}\nDTEND:${dtEnd.replace(/[-:]/g, '')}\nEND:VEVENT\n`;
-    });
+        function downloadICS() {
+            if (currentAlarms.length === 0) return alert("ยังไม่มีเวลาที่จะส่งเข้าแอปปฏิทิน!");
 
-    icsContent += `END:VCALENDAR`;
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const todayStr = `${year}${month}${day}`;
+            const dtStamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
-    const blob = new Blob([icsContent.replace(/\n/g, "\r\n")], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'random-alarms.ics';
-    link.click();
-}
+            let icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n` +
+                             `BEGIN:VTIMEZONE\nTZID:Asia/Bangkok\nBEGIN:STANDARD\nDTSTART:19700101T000000\nTZOFFSETFROM:+0700\nTZOFFSETTO:+0700\nTZNAME:ICT\nEND:STANDARD\nEND:VTIMEZONE\n`;
+
+            currentAlarms.forEach((time, index) => {
+                const [hour, minute] = time.split(":");
+                const dtStart = `${todayStr}T${hour}${minute}00`;
+                const endMinute = (parseInt(minute) + 5).toString().padStart(2, '0');
+                const dtEnd = `${todayStr}T${hour}${endMinute}00`;
+                const uid = `${todayStr}-${hour}${minute}-${index}@randomalarm`;
+
+                icsContent += `BEGIN:VEVENT\n` +
+                              `UID:${uid}\n` +
+                              `DTSTAMP:${dtStamp}\n` +
+                              `SUMMARY:⏰ เตือนสติ (เวลา ${time})\n` +
+                              `DTSTART;TZID=Asia/Bangkok:${dtStart}\n` +
+                              `DTEND;TZID=Asia/Bangkok:${dtEnd}\n` +
+                              `END:VEVENT\n`;
+            });
+
+            icsContent += `END:VCALENDAR`;
+
+            const blob = new Blob([icsContent.replace(/\n/g, "\r\n")], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'random-alarms.ics';
+            link.click();
+        }
